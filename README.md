@@ -1,1 +1,1 @@
-# chic-rust-v2
+# RUST implementation of CHIC
