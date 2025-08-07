@@ -1,3 +1,6 @@
+// This file is based on code from https://github.com/Pure-Peace/simple-rijndael/, licensed under the MIT License.
+// Copyright (c) [2021] Pure-Peace
+
 pub type RoundKeys = [[u32; 8]; 15];
 
 pub const ROUND_KEYS: RoundKeys = [[0; 8]; 15];

@@ -1,3 +1,6 @@
+// This file is based on code from https://github.com/Pure-Peace/simple-rijndael/, licensed under the MIT License.
+// Copyright (c) [2021] Pure-Peace
+
 use crate::hic::ic::{constants::*, errors::Errors};
 
 macro_rules! require {
