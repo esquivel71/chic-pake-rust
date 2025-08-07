@@ -20,10 +20,8 @@ pqc_kyber = { version = "0.7.1", features = ["std"], optional = true }
 rand = "0.8.5"
 pqc_kyber = { version= "0.7.1", features = ["std"] }
 libcrux = { git = "https://github.com/cryspen/libcrux.git", branch = "main" }
-kyber_asm = { git = "ssh://git@github.com/esquivel71/kyber_asm_rust.git", branch = "main"}
 
 [features]
-
 default = ["use_kyber768"]
 use_kyber512  = []
 use_kyber768  = []
