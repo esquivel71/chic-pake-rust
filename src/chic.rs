@@ -240,10 +240,6 @@ mod tests {
             ss
         };
 
-        let keypair_none: Option<fn(&mut ThreadRng) -> ([u8;KYBER_PUBLICKEYBYTES],[u8;KYBER_SECRETKEYBYTES])> = None;
-        let encapsulate_none: Option<fn(&[u8;KYBER_PUBLICKEYBYTES], &mut ThreadRng) -> ([u8;KYBER_CIPHERTEXTBYTES],[u8;KYBER_SYMBYTES])> = None;
-        let decapsulate_none: Option<fn(&[u8;KYBER_CIPHERTEXTBYTES], &[u8;KYBER_SECRETKEYBYTES]) -> [u8;KYBER_SYMBYTES]> = None;
-
         // msg1 is the encrypted public key Alice sends to Bob
         assert_eq!(init_start(&mut msg1, &mut pk, &mut sk, &pw, &sid, &mut rng, Some(keypair_func)), Ok(()));
         // key_a is the shared secret Bob derived, and msg2 is the ciphertext containing that secret

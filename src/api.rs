@@ -1,5 +1,5 @@
 use rand_core::{CryptoRng,RngCore};
-use crate::{params::*,ekekem::*,error::*};
+use crate::{params::*,chic::*,error::*};
 
 pub fn pake_init_start<R,F>(pw: &[u8;KYBER_SYMBYTES], rng: &mut R, mut keypair: F) -> PakeKeyPair
 where

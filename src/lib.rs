@@ -3,7 +3,7 @@
 
 mod api;
 mod error;
-mod ekekem;
+mod chic;
 mod hic;
 mod symmetric;
 mod reference;
