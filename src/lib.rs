@@ -12,3 +12,4 @@ mod rng;
 
 pub use api::*;
 pub use error::*;
+pub use params::*;
