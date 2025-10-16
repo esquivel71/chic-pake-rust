@@ -7,7 +7,7 @@ mod chic;
 mod hic;
 mod symmetric;
 mod reference;
-mod params;
+pub mod params;
 mod rng;
 
 pub use api::*;
