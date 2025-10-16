@@ -29,8 +29,9 @@ where
     }
     let mut ct = [0u8; KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES];
     let mut ss = [0u8; KYBER_SYMBYTES];
-    resp(&mut ss, &mut ct, pk, pw, &sid, rng, Some(encapsulate))?;
-    Ok((ct, ss))
+    let mut dec_pk = [0u8; KYBER_PUBLICKEYBYTES];
+    resp(&mut ss, &mut ct, &mut dec_pk, pk, pw, &sid, rng, Some(encapsulate))?;
+    Ok((ct, ss, dec_pk))
 }
 
 pub fn pake_init_end<F>(ct: &[u8;KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES], sid: &[u8; KYBER_SYMBYTES], enc_pk: &[u8;KYBER_PUBLICKEYBYTES], pk: &[u8;KYBER_PUBLICKEYBYTES], sk: &[u8;KYBER_SECRETKEYBYTES], decapsulate: F) -> PakeDecapsulated

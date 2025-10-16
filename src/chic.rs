@@ -68,6 +68,7 @@ where
 pub fn resp<R,F>(
     key: &mut [u8;KYBER_SYMBYTES],
     msg2: &mut [u8;MSG2_LEN],
+    dec_pk: &mut [u8;KYBER_PUBLICKEYBYTES],
     msg1: &[u8;KYBER_PUBLICKEYBYTES],
     pw: &[u8;KYBER_SYMBYTES],
     sid: &[u8;KYBER_SYMBYTES],
@@ -78,20 +79,20 @@ where
     R: RngCore + CryptoRng,
     F: FnMut(&[u8;KYBER_PUBLICKEYBYTES],&mut R) -> ([u8;KYBER_CIPHERTEXTBYTES],[u8;KYBER_SYMBYTES])
 {
-    let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
+    // let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
     let mut keytag = [0u8;2*KYBER_SYMBYTES];
     let mut hashin = [0u8;2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES];
 
-    let _ = hic_inv(&mut pk, msg1, pw, sid);
+    let _ = hic_inv(dec_pk, msg1, pw, sid);
     match maybe_encapsulate {
         Some(mut encapsulate) => {
-            let (ct, ss) = encapsulate(&(pk), _rng);
+            let (ct, ss) = encapsulate(&(dec_pk), _rng);
             msg2[KYBER_SYMBYTES..].copy_from_slice(&ct);
             hashin[..KYBER_SYMBYTES].copy_from_slice(&ss);
         }
         None => {
             #[cfg(feature = "default-kyber")] {
-                let (ct,ss) = pqc_kyber::encapsulate(&pk, _rng).unwrap();
+                let (ct,ss) = pqc_kyber::encapsulate(&dec_pk, _rng).unwrap();
                 msg2[KYBER_SYMBYTES..].copy_from_slice(&ct);
                 hashin[..KYBER_SYMBYTES].copy_from_slice(&ss);
             }
@@ -104,7 +105,7 @@ where
     
     // Tag = H(K_s,sid,pk,apk,cph)
     hashin[KYBER_SYMBYTES..2*KYBER_SYMBYTES].copy_from_slice(sid);
-    hashin[2*KYBER_SYMBYTES..2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES].copy_from_slice(&pk);
+    hashin[2*KYBER_SYMBYTES..2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES].copy_from_slice(dec_pk);
     hashin[2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES..2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES].copy_from_slice(msg1);
     hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES..].copy_from_slice(&msg2[KYBER_SYMBYTES..KYBER_SYMBYTES+KYBER_CIPHERTEXTBYTES]);
     hash_g(&mut keytag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES);
@@ -213,6 +214,7 @@ mod tests {
         let mut pw = [0u8;KYBER_SSBYTES];
         let mut sk = [0u8;KYBER_SECRETKEYBYTES];
         let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
+        let mut dec_pk = [0u8;KYBER_PUBLICKEYBYTES];
         let mut key_a = [0u8;KYBER_SSBYTES];
         let mut key_b = [0u8;KYBER_SSBYTES];
         let mut msg1 = [0u8;MSG1_LEN];
@@ -243,7 +245,7 @@ mod tests {
         // msg1 is the encrypted public key Alice sends to Bob
         assert_eq!(init_start(&mut msg1, &mut pk, &mut sk, &pw, &sid, &mut rng, Some(keypair_func)), Ok(()));
         // key_a is the shared secret Bob derived, and msg2 is the ciphertext containing that secret
-        assert_eq!(resp(&mut key_a, &mut msg2, &msg1, &pw, &sid, &mut rng, Some(encapsulate_func)), Ok(()));
+        assert_eq!(resp(&mut key_a, &mut msg2, &mut dec_pk, &msg1, &pw, &sid, &mut rng, Some(encapsulate_func)), Ok(()));
         // last step receives msg2, the ciphertext containing the shared secret, and outputs key_b, the shared secret =key_a
         assert_eq!(init_end(&mut key_b, &mut msg2, &msg1, &pk, &sk, &sid, Some(decapsulate_func)), Ok(0));
         
@@ -257,6 +259,7 @@ mod tests {
         let mut pw = [0u8;KYBER_SSBYTES];
         let mut sk = [0u8;KYBER_SECRETKEYBYTES];
         let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
+        let mut dec_pk = [0u8;KYBER_PUBLICKEYBYTES];
         let mut key_a = [0u8;KYBER_SSBYTES];
         let mut key_b = [0u8;KYBER_SSBYTES];
         let mut msg1 = [0u8;MSG1_LEN];
@@ -275,7 +278,7 @@ mod tests {
         // msg1 is the encrypted public key Alice sends to Bob
         assert_eq!(init_start(&mut msg1, &mut pk, &mut sk, &pw, &sid, &mut rng, keypair_none), Ok(()));
         // key_a is the shared secret Bob derived, and msg2 is the ciphertext containing that secret
-        assert_eq!(resp(&mut key_a, &mut msg2, &msg1, &pw, &sid, &mut rng, encapsulate_none), Ok(()));
+        assert_eq!(resp(&mut key_a, &mut msg2, &mut dec_pk, &msg1, &pw, &sid, &mut rng, encapsulate_none), Ok(()));
         // last step receives msg2, the ciphertext containing the shared secret, and outputs key_b, the shared secret =key_a
         assert_eq!(init_end(&mut key_b, &mut msg2, &msg1, &pk, &sk, &sid, decapsulate_none), Ok(0));
         

@@ -1,7 +1,7 @@
 use crate::error::PakeError;
 
 pub type PakeKeyPair = Result<([u8; KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES],[u8; KYBER_PUBLICKEYBYTES],[u8; KYBER_SECRETKEYBYTES]), PakeError>;
-pub type PakeEncapsulated = Result<([u8; KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES], [u8; KYBER_SSBYTES]), PakeError>;
+pub type PakeEncapsulated = Result<([u8; KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES], [u8; KYBER_SSBYTES], [u8; KYBER_PUBLICKEYBYTES]), PakeError>;
 pub type PakeDecapsulated = Result<([u8;KYBER_SYMBYTES],u8), PakeError>;
 
 /// The security level of Kyber
