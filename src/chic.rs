@@ -1,5 +1,5 @@
 use crate::hic::hic_inv;
-use crate::symmetric::hash_g;
+use crate::symmetric::{hash_g,hash_h};
 use crate::reference::verify::{cmov,verify};
 use crate::params::{KYBER_CIPHERTEXTBYTES, KYBER_PUBLICKEYBYTES, KYBER_SECRETKEYBYTES, KYBER_SYMBYTES, MSG1_LEN, MSG2_LEN};
 use rand_core::{CryptoRng, RngCore};
@@ -68,7 +68,7 @@ where
 pub fn resp<R,F>(
     key: &mut [u8;KYBER_SYMBYTES],
     msg2: &mut [u8;MSG2_LEN],
-    dec_pk: &mut [u8;KYBER_PUBLICKEYBYTES],
+    init_tag: &mut [u8;KYBER_SYMBYTES],
     msg1: &[u8;KYBER_PUBLICKEYBYTES],
     pw: &[u8;KYBER_SYMBYTES],
     sid: &[u8;KYBER_SYMBYTES],
@@ -79,20 +79,21 @@ where
     R: RngCore + CryptoRng,
     F: FnMut(&[u8;KYBER_PUBLICKEYBYTES],&mut R) -> ([u8;KYBER_CIPHERTEXTBYTES],[u8;KYBER_SYMBYTES])
 {
-    // let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
+    let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
     let mut keytag = [0u8;2*KYBER_SYMBYTES];
-    let mut hashin = [0u8;2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES];
+    let mut hashin = [0u8;2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1];
+    // let mut init_tag = [0u8;KYBER_SYMBYTES];
 
-    let _ = hic_inv(dec_pk, msg1, pw, sid);
+    let _ = hic_inv(&mut pk, msg1, pw, sid);
     match maybe_encapsulate {
         Some(mut encapsulate) => {
-            let (ct, ss) = encapsulate(&(dec_pk), _rng);
+            let (ct, ss) = encapsulate(&(pk), _rng);
             msg2[KYBER_SYMBYTES..].copy_from_slice(&ct);
             hashin[..KYBER_SYMBYTES].copy_from_slice(&ss);
         }
         None => {
             #[cfg(feature = "default-kyber")] {
-                let (ct,ss) = pqc_kyber::encapsulate(&dec_pk, _rng).unwrap();
+                let (ct,ss) = pqc_kyber::encapsulate(&pk, _rng).unwrap();
                 msg2[KYBER_SYMBYTES..].copy_from_slice(&ct);
                 hashin[..KYBER_SYMBYTES].copy_from_slice(&ss);
             }
@@ -105,12 +106,18 @@ where
     
     // Tag = H(K_s,sid,pk,apk,cph)
     hashin[KYBER_SYMBYTES..2*KYBER_SYMBYTES].copy_from_slice(sid);
-    hashin[2*KYBER_SYMBYTES..2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES].copy_from_slice(dec_pk);
+    hashin[2*KYBER_SYMBYTES..2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES].copy_from_slice(&pk);
     hashin[2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES..2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES].copy_from_slice(msg1);
-    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES..].copy_from_slice(&msg2[KYBER_SYMBYTES..KYBER_SYMBYTES+KYBER_CIPHERTEXTBYTES]);
-    hash_g(&mut keytag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES);
+    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES..2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES].copy_from_slice(&msg2[KYBER_SYMBYTES..KYBER_SYMBYTES+KYBER_CIPHERTEXTBYTES]);
+    // Responder to initiator key confirmation tag
+    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 0;
+    hash_g(&mut keytag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
     key[..KYBER_SYMBYTES].copy_from_slice(&keytag[..KYBER_SYMBYTES]);
     msg2[..KYBER_SYMBYTES].copy_from_slice(&keytag[KYBER_SYMBYTES..2*KYBER_SYMBYTES]);
+
+    // Pre calculate initiator to responder key confirmation tag
+    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 1;
+    hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
 
     Ok(())
 }
@@ -153,6 +160,7 @@ where
 /// Return values: 0 if ok, -1 if not ok
 pub fn init_end<F>(
     key: &mut [u8;KYBER_SYMBYTES],
+    init_tag: &mut [u8; KYBER_SYMBYTES],
     msg2: &[u8;MSG2_LEN],
     msg1: &[u8;MSG1_LEN],
     pk: &[u8;KYBER_PUBLICKEYBYTES],
@@ -164,7 +172,7 @@ where
     F: FnMut(&[u8;KYBER_CIPHERTEXTBYTES],&[u8;KYBER_SECRETKEYBYTES]) -> [u8;KYBER_SYMBYTES]
 {
     let mut keytag = [0u8;2*KYBER_SYMBYTES];
-    let mut hashin = [0u8;2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES];
+    let mut hashin = [0u8;2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1];
 
     let mut ct = [0u8;KYBER_CIPHERTEXTBYTES];
     ct.copy_from_slice(&(*msg2)[KYBER_SYMBYTES..]);
@@ -189,14 +197,20 @@ where
     hashin[KYBER_SYMBYTES..2*KYBER_SYMBYTES].copy_from_slice(sid);
     hashin[2*KYBER_SYMBYTES..2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES].copy_from_slice(pk);
     hashin[2*KYBER_SYMBYTES+KYBER_PUBLICKEYBYTES..2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES].copy_from_slice(msg1);
-    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES..].copy_from_slice(&msg2[KYBER_SYMBYTES..KYBER_SYMBYTES+KYBER_CIPHERTEXTBYTES]);
-    hash_g(&mut keytag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES);
+    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES..2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES].copy_from_slice(&msg2[KYBER_SYMBYTES..KYBER_SYMBYTES+KYBER_CIPHERTEXTBYTES]);
+    // Responder to initiator key confirmation tag
+    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 0;
+    hash_g(&mut keytag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
 
     // Check tag
     let result = verify(&keytag[KYBER_SYMBYTES..], msg2, KYBER_SYMBYTES);
 
     // If all works out
     cmov(key, &keytag, KYBER_SYMBYTES, (result&1)^1 as u8);
+
+    // Pre calculate initiator to responder key confirmation tag
+    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 0;
+    hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
 
     Ok(result)
 }
@@ -214,11 +228,12 @@ mod tests {
         let mut pw = [0u8;KYBER_SSBYTES];
         let mut sk = [0u8;KYBER_SECRETKEYBYTES];
         let mut pk = [0u8;KYBER_PUBLICKEYBYTES];
-        let mut dec_pk = [0u8;KYBER_PUBLICKEYBYTES];
         let mut key_a = [0u8;KYBER_SSBYTES];
         let mut key_b = [0u8;KYBER_SSBYTES];
         let mut msg1 = [0u8;MSG1_LEN];
         let mut msg2 = [0u8;MSG2_LEN];
+        let mut init_tag = [0u8;KYBER_SYMBYTES];
+        let mut init_tag_2 = [0u8;KYBER_SYMBYTES];
         
         let mut rng = rand::thread_rng();
     
@@ -245,11 +260,14 @@ mod tests {
         // msg1 is the encrypted public key Alice sends to Bob
         assert_eq!(init_start(&mut msg1, &mut pk, &mut sk, &pw, &sid, &mut rng, Some(keypair_func)), Ok(()));
         // key_a is the shared secret Bob derived, and msg2 is the ciphertext containing that secret
-        assert_eq!(resp(&mut key_a, &mut msg2, &mut dec_pk, &msg1, &pw, &sid, &mut rng, Some(encapsulate_func)), Ok(()));
+        assert_eq!(resp(&mut key_a, &mut msg2, &mut init_tag, &msg1, &pw, &sid, &mut rng, Some(encapsulate_func)), Ok(()));
         // last step receives msg2, the ciphertext containing the shared secret, and outputs key_b, the shared secret =key_a
-        assert_eq!(init_end(&mut key_b, &mut msg2, &msg1, &pk, &sk, &sid, Some(decapsulate_func)), Ok(0));
-        
+        assert_eq!(init_end(&mut key_b, &mut init_tag_2, &msg2, &msg1, &pk, &sk, &sid, Some(decapsulate_func)), Ok(0));
+
         assert_eq!(key_a, key_b);
+
+        // Test key confirmation from initiator to responder
+        assert_eq!(init_tag,init_tag_2);
     }
 
     #[test]

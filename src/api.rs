@@ -29,9 +29,9 @@ where
     }
     let mut ct = [0u8; KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES];
     let mut ss = [0u8; KYBER_SYMBYTES];
-    let mut dec_pk = [0u8; KYBER_PUBLICKEYBYTES];
-    resp(&mut ss, &mut ct, &mut dec_pk, pk, pw, &sid, rng, Some(encapsulate))?;
-    Ok((ct, ss, dec_pk))
+    let mut init_tag = [0u8; KYBER_SYMBYTES];
+    resp(&mut ss, &mut ct, &mut init_tag, pk, pw, &sid, rng, Some(encapsulate))?;
+    Ok((ct, ss, init_tag))
 }
 
 pub fn pake_init_end<F>(ct: &[u8;KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES], sid: &[u8; KYBER_SYMBYTES], enc_pk: &[u8;KYBER_PUBLICKEYBYTES], pk: &[u8;KYBER_PUBLICKEYBYTES], sk: &[u8;KYBER_SECRETKEYBYTES], decapsulate: F) -> PakeDecapsulated
@@ -41,11 +41,10 @@ where
     if pk.len() != KYBER_PUBLICKEYBYTES {
         return Err(PakeError::InvalidInput);
     }
-    let mut ct_and_tag = [0u8; KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES];
-    ct_and_tag.copy_from_slice(ct);
     let mut ss = [0u8; KYBER_SYMBYTES];
-    let result = init_end(&mut ss, &mut ct_and_tag, enc_pk, pk, sk, &sid, Some(decapsulate))?;
-    Ok((ss,result))
+    let mut init_tag = [0u8; KYBER_SYMBYTES];
+    let result = init_end(&mut ss, &mut init_tag,  ct, enc_pk, pk, sk, &sid, Some(decapsulate))?;
+    Ok((ss,init_tag,result))
 }
 
 #[cfg(feature = "default-kyber")]
