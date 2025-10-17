@@ -116,8 +116,10 @@ where
     msg2[..KYBER_SYMBYTES].copy_from_slice(&keytag[KYBER_SYMBYTES..2*KYBER_SYMBYTES]);
 
     // Pre calculate initiator to responder key confirmation tag
-    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 1;
-    hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
+    // hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 1;
+    // hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
+
+    init_tag.copy_from_slice(&keytag[KYBER_SYMBYTES..]);
 
     Ok(())
 }
@@ -209,8 +211,9 @@ where
     cmov(key, &keytag, KYBER_SYMBYTES, (result&1)^1 as u8);
 
     // Pre calculate initiator to responder key confirmation tag
-    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 1;
-    hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
+    // hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 1;
+    // hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
+    init_tag.copy_from_slice(&keytag[KYBER_SYMBYTES..]);
 
     Ok(result)
 }
