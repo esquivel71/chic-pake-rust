@@ -32,7 +32,8 @@ impl KeccakState {
 #[cfg(not(feature = "sha2"))]
 pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
     #[cfg(feature = "libjade-sha3")]
-    kyber_asm::sha3_256_libjade(out, input, inlen as u32);
+    // kyber_asm::sha3_256_libjade(out, input, inlen as u32);
+    kyber_asm::sha256_libjade(out, input, inlen as u32);
     #[cfg(not(feature = "libjade-sha3"))]
     sha3_256(out, input, inlen);
 }
