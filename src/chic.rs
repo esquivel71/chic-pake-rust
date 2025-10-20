@@ -116,8 +116,10 @@ where
     msg2[..KYBER_SYMBYTES].copy_from_slice(&keytag[KYBER_SYMBYTES..2*KYBER_SYMBYTES]);
 
     // Pre calculate initiator to responder key confirmation tag
-    hashin[2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES] = 1;
-    hash_h(init_tag, &hashin, 2*KYBER_SYMBYTES+2*KYBER_PUBLICKEYBYTES+KYBER_CIPHERTEXTBYTES+1);
+    let mut to_authenticate = [0u8; 2*KYBER_SYMBYTES];
+    to_authenticate[..KYBER_SYMBYTES].copy_from_slice(key);
+    to_authenticate[KYBER_SYMBYTES..].copy_from_slice(sid);
+    hash_h(init_tag, &to_authenticate, KYBER_SYMBYTES);
 
     Ok(())
 }
