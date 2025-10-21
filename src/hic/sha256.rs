@@ -218,5 +218,11 @@ mod tests {
             "d7a8fbb307d7809469ca9abcb0082e4f\
              8d5651e46d3cdb762d02d0bf37c9e592"
         );
+
+        assert_eq!(
+            hex(&sha256(b"hello, this is patrick")),
+            "30cd5bfe42f266fe90da866e02055273\
+            90aa49bbe943c88d66c0cf5968f5fcc8"
+        )
     }
 }

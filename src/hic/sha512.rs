@@ -228,5 +228,12 @@ mod tests {
              0a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd\
              454d4423643ce80e2a9ac94fa54ca49f"
         );
+
+        assert_eq!(
+            hex(&sha512(b"hello, this is patrick")),
+            "606470c7243c69953f6ace64469d761df26230a126daa54ca\
+             b261dc3d3e287945de061f4f31bfc692dbe97e4fa229ef4cd\
+             49d0cd57d33f15bbd991f825833181"
+        )
     }
 }
