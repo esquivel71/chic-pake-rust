@@ -46,9 +46,6 @@ pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
 
 #[cfg(feature = "sha2")]
 pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
-    #[cfg(feature = "libjade_sha")]
-    kyber_asm::sha256_libjade(out, input, inlen as usize);
-    #[cfg(not(feature = "libjade_sha"))]
     let mut hasher = Sha256::new();
     hasher.update(&input[..inlen]);
     let digest = hasher.finalize();
@@ -62,7 +59,6 @@ pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
         out.copy_from_slice(&out2[..64]);
     }
     else {
-        println!("Using OLD SHA!");
         let mut hasher = Sha512::new();
         hasher.update(&input[..inlen]);
         let digest = hasher.finalize();
