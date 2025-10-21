@@ -54,7 +54,7 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
         hasher.update(&input[..inlen]);
         let digest = hasher.finalize();
         out[..digest.len()].copy_from_slice(&digest);
-        out[2] += 1;
+        // out[2] += 1;
     }
 }
 
