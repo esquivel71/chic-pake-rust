@@ -45,7 +45,7 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
     // hasher.update(&input[..inlen]);
     // let digest = hasher.finalize();
     // out[..digest.len()].copy_from_slice(&digest);
-    kyber_asm::sha256_libjade(out, input, inlen);
+    kyber_asm::sha256_libjade(out, input, inlen as u32);
 }
 
 #[cfg(feature = "sha2")]
