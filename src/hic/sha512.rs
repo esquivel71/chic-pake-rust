@@ -195,3 +195,38 @@ pub fn sha512(data: &[u8]) -> [u8; 64] {
 #[inline(always)] fn big_sigma1(x: u64) -> u64 { x.rotate_right(14) ^ x.rotate_right(18) ^ x.rotate_right(41) }
 #[inline(always)] fn sigma0(x: u64) -> u64 { x.rotate_right(1) ^ x.rotate_right(8) ^ (x >> 7) }
 #[inline(always)] fn sigma1(x: u64) -> u64 { x.rotate_right(19) ^ x.rotate_right(61) ^ (x >> 6) }
+
+#[cfg(test)]
+extern crate std;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::string::String;
+
+    fn hex(bytes: &[u8]) -> String {
+        let mut s = String::with_capacity(bytes.len() * 2);
+        for b in bytes {
+            use core::fmt::Write;
+            write!(s, "{:02x}", b).unwrap();
+        }
+        s
+    }
+
+    #[test]
+    fn test_vectors() {
+        assert_eq!(
+            hex(&sha512(b"")),
+            "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc\
+             83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f\
+             63b931bd47417a81a538327af927da3e"
+        );
+
+        assert_eq!(
+            hex(&sha512(b"abc")),
+            "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea2\
+             0a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd\
+             454d4423643ce80e2a9ac94fa54ca49f"
+        );
+    }
+}

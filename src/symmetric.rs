@@ -1,7 +1,7 @@
 use crate::reference::fips202::*;
 use crate::params::*;
-use crate::hic::sha512_nostd::sha512;
-use crate::hic::sha256_nostd::sha256;
+use crate::hic::sha512::sha512;
+use crate::hic::sha256::sha256;
 
 #[cfg(feature = "sha2")]
 use sha2::{Digest, Sha256, Sha512};
