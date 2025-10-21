@@ -57,11 +57,14 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
 
 #[cfg(feature = "sha2")]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
-    // let mut hasher = Sha512::new();
-    // hasher.update(&input[..inlen]);
-    // let digest = hasher.finalize();
-    // out[..digest.len()].copy_from_slice(&digest);
+    #[cfg(not(feature = "test_new_sha"))]
+    let mut hasher = Sha512::new();
+    hasher.update(&input[..inlen]);
+    let digest = hasher.finalize();
+    out[..digest.len()].copy_from_slice(&digest);
+    #[cfg(feature = "test_new_sha")]
     let out2 = sha512(input);
+    #[cfg(feature = "test_new_sha")]
     out.copy_from_slice(&out2[..64]);
 }
 
