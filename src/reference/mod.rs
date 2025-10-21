@@ -1,5 +1,3 @@
-pub mod aes256ctr;
-pub mod cbd;
 pub mod fips202;
 pub mod ntt;
 pub mod poly;
