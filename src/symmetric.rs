@@ -3,7 +3,7 @@ use crate::reference::fips202::*;
 use crate::params::*;
 
 #[cfg(feature = "sha2")]
-// use sha2::{Digest, Sha512};
+use sha2::{Digest, Sha256, Sha512};
 
 pub const XOF_BLOCKBYTES: usize = SHAKE128_RATE;
 
@@ -31,6 +31,9 @@ impl KeccakState {
 /// SHA3-256
 #[cfg(not(feature = "sha2"))]
 pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
+    #[cfg(feature = "libjade_sha")]
+    kyber_asm::sha3_256_libjade(out, input, inlen as usize);
+    #[cfg(not(feature = "libjade_sha"))]
     sha3_256(out, input, inlen);
 }
 
@@ -41,37 +44,21 @@ pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
 
 #[cfg(feature = "sha2")]
 pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
-    // let mut hasher = Sha256::new();
-    // hasher.update(&input[..inlen]);
-    // let digest = hasher.finalize();
-    // out[..digest.len()].copy_from_slice(&digest);
-    // kyber_asm::sha256_libjade(out, input, inlen as u32);
-    use core::hash::{Hash, Hasher};
-
-    use rs_sha256::HasherContext;
-    let mut sha256hasher = rs_sha256::Sha256Hasher::default();
-    input.hash(&mut sha256hasher);
-    let _ = sha256hasher.finish();
-    let hash_digest_wrapper = HasherContext::finish(&mut sha256hasher);
-    out.copy_from_slice(hash_digest_wrapper.as_ref());
+    #[cfg(feature = "libjade_sha")]
+    kyber_asm::sha256_libjade(out, input, inlen as usize);
+    #[cfg(not(feature = "libjade_sha"))]
+    let mut hasher = Sha256::new();
+    hasher.update(&input[..inlen]);
+    let digest = hasher.finalize();
+    out[..digest.len()].copy_from_slice(&digest);
 }
 
 #[cfg(feature = "sha2")]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
-    // let mut hasher = Sha512::new();
-    // hasher.update(&input[..inlen]);
-    // let digest = hasher.finalize();
-    // out[..digest.len()].copy_from_slice(&digest);
-    // 1. Initialize the hasher (uses fixed-size state)
-
-    use core::hash::{Hash, Hasher};
-
-    use rs_sha512::HasherContext;
-    let mut sha512hasher = rs_sha512::Sha512Hasher::default();
-    input.hash(&mut sha512hasher);
-    let _ = sha512hasher.finish();
-    let hash_digest_wrapper = HasherContext::finish(&mut sha512hasher);
-    out.copy_from_slice(hash_digest_wrapper.as_ref());
+    let mut hasher = Sha512::new();
+    hasher.update(&input[..inlen]);
+    let digest = hasher.finalize();
+    out[..digest.len()].copy_from_slice(&digest);
 }
 
 pub fn xof_absorb(state: &mut XofState, input: &[u8], x: u8, y: u8) {
