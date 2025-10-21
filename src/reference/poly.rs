@@ -147,22 +147,6 @@ pub fn poly_frombytes(r: &mut Poly, a: &[u8]) {
     }
 }
 
-/// Name:  poly_getnoise_eta1
-///
-/// Description: Sample a polynomial deterministically from a seed and a nonce,
-///  with output polynomial close to centered binomial distribution
-///  with parameter KYBER_ETA1
-///
-/// Arguments:   - poly *r:     output polynomial
-///  - const [u8] seed: input seed (pointing to array of length KYBER_SYMBYTES bytes)
-///  - [u8]  nonce:   one-byte input nonce
-pub fn poly_getnoise_eta1(r: &mut Poly, seed: &[u8], nonce: u8) {
-    const LENGTH: usize = KYBER_ETA1 * KYBER_N / 4;
-    let mut buf = [0u8; LENGTH];
-    prf(&mut buf, LENGTH, seed, nonce);
-    poly_cbd_eta1(r, &buf);
-}
-
 /// Name:  poly_getnoise_eta2
 ///
 /// Description: Sample a polynomial deterministically from a seed and a nonce,
