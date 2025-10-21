@@ -3,7 +3,7 @@ use crate::reference::fips202::*;
 use crate::params::*;
 
 #[cfg(feature = "sha2")]
-use sha2::{Digest, Sha256, Sha512};
+use sha2::{Digest, Sha512};
 
 pub const XOF_BLOCKBYTES: usize = SHAKE128_RATE;
 
