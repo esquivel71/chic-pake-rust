@@ -50,7 +50,6 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
         out.copy_from_slice(&out2[..32]);
     }
     else {
-        println!("Using regular SHA2");
         let mut hasher = Sha256::new();
         hasher.update(&input[..inlen]);
         let digest = hasher.finalize();
@@ -65,7 +64,6 @@ pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
         out.copy_from_slice(&out2[..64]);
     }
     else {
-        println!("Using regular SHA2");
         let mut hasher = Sha512::new();
         hasher.update(&input[..inlen]);
         let digest = hasher.finalize();
