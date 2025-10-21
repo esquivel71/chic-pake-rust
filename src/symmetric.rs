@@ -41,8 +41,6 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
 #[cfg(not(feature = "sha2"))]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
     sha3_512(out, input, inlen);
-    
-
 }
 
 #[cfg(feature = "sha2")]

@@ -23,7 +23,7 @@ pqc_kyber = { version= "0.7.1", features = ["std"] }
 libcrux = { git = "https://github.com/cryspen/libcrux.git", branch = "main" }
 
 [features]
-default = ["use_kyber768", "sha2", "std", "small_sha"]
+default = ["use_kyber768", "sha2"]
 use_kyber512  = []
 use_kyber768  = []
 use_kyber1024 = []
