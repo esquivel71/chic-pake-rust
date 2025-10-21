@@ -1,6 +1,7 @@
 use crate::reference::fips202::*;
 use crate::params::*;
 use crate::hic::sha512_nostd::sha512;
+use crate::hic::sha256_nostd::sha256;
 
 #[cfg(feature = "sha2")]
 use sha2::{Digest, Sha256, Sha512};
@@ -46,19 +47,27 @@ pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
 
 #[cfg(feature = "sha2")]
 pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
-    let mut hasher = Sha256::new();
-    hasher.update(&input[..inlen]);
-    let digest = hasher.finalize();
-    out[..digest.len()].copy_from_slice(&digest);
+    if cfg!(feature = "small_sha") {
+        let out2 = sha256(input);
+        out.copy_from_slice(&out2[..32]);
+    }
+    else {
+        println!("Using regular SHA2");
+        let mut hasher = Sha256::new();
+        hasher.update(&input[..inlen]);
+        let digest = hasher.finalize();
+        out[..digest.len()].copy_from_slice(&digest);
+    }
 }
 
 #[cfg(feature = "sha2")]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
-    if cfg!(feature = "test_new_sha") {
+    if cfg!(feature = "small_sha") {
         let out2 = sha512(input);
         out.copy_from_slice(&out2[..64]);
     }
     else {
+        println!("Using regular SHA2");
         let mut hasher = Sha512::new();
         hasher.update(&input[..inlen]);
         let digest = hasher.finalize();
