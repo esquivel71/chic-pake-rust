@@ -1,5 +1,6 @@
 use crate::reference::fips202::*;
 use crate::params::*;
+use crate::hic::sha512_nostd::sha512;
 
 #[cfg(feature = "sha2")]
 use sha2::{Digest, Sha256, Sha512};
@@ -31,7 +32,7 @@ impl KeccakState {
 #[cfg(not(feature = "sha2"))]
 pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
     #[cfg(feature = "libjade_sha")]
-    kyber_asm::sha3_256_libjade(out, input, inlen as usize);
+    kyber_asm::sha256_libjade(out, input, inlen as usize);
     #[cfg(not(feature = "libjade_sha"))]
     sha3_256(out, input, inlen);
 }
@@ -39,6 +40,8 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
 #[cfg(not(feature = "sha2"))]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
     sha3_512(out, input, inlen);
+    
+
 }
 
 #[cfg(feature = "sha2")]
@@ -54,10 +57,12 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
 
 #[cfg(feature = "sha2")]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
-    let mut hasher = Sha512::new();
-    hasher.update(&input[..inlen]);
-    let digest = hasher.finalize();
-    out[..digest.len()].copy_from_slice(&digest);
+    // let mut hasher = Sha512::new();
+    // hasher.update(&input[..inlen]);
+    // let digest = hasher.finalize();
+    // out[..digest.len()].copy_from_slice(&digest);
+    let out2 = sha512(input);
+    out.copy_from_slice(&out2[..64]);
 }
 
 pub fn xof_absorb(state: &mut XofState, input: &[u8], x: u8, y: u8) {

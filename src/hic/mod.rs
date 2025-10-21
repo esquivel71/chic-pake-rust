@@ -3,6 +3,7 @@ use crate::{symmetric::hash_h,params::*};
 
 mod ic;
 mod utils;
+pub mod sha512_nostd;
 
 /// Name:  hic_eval
 ///

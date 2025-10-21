@@ -375,9 +375,37 @@ pub fn shake256(out: &mut [u8], mut outlen: usize, input: &[u8], inlen: usize) {
     shake256_squeeze(&mut out[idx..], outlen, &mut state);
 }
 
+/// Name:  sha3_256
+///
+/// Description: SHA3-256 with non-incremental API
+///
+/// Arguments:   - [u8] h:  output (32 bytes)
+///  - const [u8] input: input
+///  - usize inlen:   length of input in bytes
+pub fn sha3_256(h: &mut [u8], input: &[u8], inlen: usize) {
+    let mut s = [0u64; 25];
+    keccak_absorb_once(&mut s, SHA3_256_RATE, input, inlen, 0x06);
+    keccakf1600_statepermute(&mut s);
+    for i in 0..4 {
+        store64(&mut h[8 * i..], s[i]);
+    }
+}
 
-
-
+/// Name:  sha3_512
+///
+/// Description: SHA3-512 with non-incremental API
+///
+/// Arguments:   - [u8] h:  output (64 bytes)
+///  - const [u8] input: input
+///  - usize inlen:   length of input in bytes
+pub fn sha3_512(h: &mut [u8], input: &[u8], inlen: usize) {
+    let mut s = [0u64; 25];
+    keccak_absorb_once(&mut s, SHA3_512_RATE, input, inlen, 0x06);
+    keccakf1600_statepermute(&mut s);
+    for i in 0..8 {
+        store64(&mut h[8 * i..], s[i]);
+    }
+}
 
 /// Name:  keccak_finalize
 ///
