@@ -58,6 +58,7 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
 #[cfg(feature = "sha2")]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
     #[cfg(not(feature = "test_new_sha"))]
+    println!("Using OLD SHA!");
     let mut hasher = Sha512::new();
     hasher.update(&input[..inlen]);
     let digest = hasher.finalize();
