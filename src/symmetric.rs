@@ -57,16 +57,17 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
 
 #[cfg(feature = "sha2")]
 pub fn hash_g(out: &mut [u8], input: &[u8], inlen: usize) {
-    #[cfg(not(feature = "test_new_sha"))]
-    println!("Using OLD SHA!");
-    let mut hasher = Sha512::new();
-    hasher.update(&input[..inlen]);
-    let digest = hasher.finalize();
-    out[..digest.len()].copy_from_slice(&digest);
-    #[cfg(feature = "test_new_sha")]
-    let out2 = sha512(input);
-    #[cfg(feature = "test_new_sha")]
-    out.copy_from_slice(&out2[..64]);
+    if cfg!(feature = "test_new_sha") {
+        let out2 = sha512(input);
+        out.copy_from_slice(&out2[..64]);
+    }
+    else {
+        println!("Using OLD SHA!");
+        let mut hasher = Sha512::new();
+        hasher.update(&input[..inlen]);
+        let digest = hasher.finalize();
+        out[..digest.len()].copy_from_slice(&digest);
+    }
 }
 
 pub fn xof_absorb(state: &mut XofState, input: &[u8], x: u8, y: u8) {
