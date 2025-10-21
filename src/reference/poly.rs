@@ -1,4 +1,4 @@
-use crate::reference::{ntt::*, reduce::*};
+use crate::reference::{reduce::*};
 use crate::{params::*};
 
 #[derive(Clone)]
@@ -95,41 +95,5 @@ pub fn poly_add(r: &mut Poly, b: &Poly) {
 pub fn poly_sub(r: &mut Poly, a: &Poly) {
     for i in 0..KYBER_N {
         r.coeffs[i] = a.coeffs[i] - r.coeffs[i];
-    }
-}
-
-/// Name:  poly_frommsg
-///
-/// Description: Convert `KYBER_SYMBYTES`-byte message to polynomial
-///
-/// Arguments:   - poly *r:    output polynomial
-///  - const [u8] msg: input message (of length KYBER_SYMBYTES)
-pub fn poly_frommsg(r: &mut Poly, msg: &[u8]) {
-    let mut mask;
-    for i in 0..KYBER_N / 8 {
-        for j in 0..8 {
-            mask = ((msg[i] as u16 >> j) & 1).wrapping_neg();
-            r.coeffs[8 * i + j] = (mask & ((KYBER_Q + 1) / 2) as u16) as i16;
-        }
-    }
-}
-
-/// Name:  poly_tomsg
-///
-/// Description: Convert polynomial to 32-byte message
-///
-/// Arguments:   - [u8] msg: output message
-///  - const poly *a:  input polynomial
-pub fn poly_tomsg(msg: &mut [u8], a: Poly) {
-    let mut t;
-
-    for i in 0..KYBER_N / 8 {
-        msg[i] = 0;
-        for j in 0..8 {
-            t = a.coeffs[8 * i + j];
-            t += (t >> 15) & KYBER_Q as i16;
-            t = (((t << 1) + KYBER_Q as i16 / 2) / KYBER_Q as i16) & 1;
-            msg[i] |= (t << j) as u8;
-        }
     }
 }

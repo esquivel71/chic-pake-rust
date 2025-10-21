@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::reference::fips202::*;
 use crate::params::*;
 
