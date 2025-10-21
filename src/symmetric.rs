@@ -45,7 +45,15 @@ pub fn hash_h(out: &mut [u8;32], input: &[u8], inlen: usize) {
     // hasher.update(&input[..inlen]);
     // let digest = hasher.finalize();
     // out[..digest.len()].copy_from_slice(&digest);
-    kyber_asm::sha256_libjade(out, input, inlen as u32);
+    // kyber_asm::sha256_libjade(out, input, inlen as u32);
+    use core::hash::{Hash, Hasher};
+
+    use rs_sha256::HasherContext;
+    let mut sha256hasher = rs_sha256::Sha256Hasher::default();
+    input.hash(&mut sha256hasher);
+    let _ = sha256hasher.finish();
+    let hash_digest_wrapper = HasherContext::finish(&mut sha256hasher);
+    out.copy_from_slice(hash_digest_wrapper.as_ref());
 }
 
 #[cfg(feature = "sha2")]
